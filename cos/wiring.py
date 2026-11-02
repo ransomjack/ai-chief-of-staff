@@ -47,7 +47,7 @@ def deps() -> Deps:
                   s.owner_name, s.timezone, now_utc)
     return Deps(store=store, wa=wa, owner_number=s.owner_number,
                 reminder_template=s.reminder_template, checkin_template=s.checkin_template,
-                template_lang=s.template_lang, now=now_utc, agent=agent,
+                template_lang=s.template_lang, now=now_utc, tz=s.timezone, agent=agent,
                 brief=lambda: build_brief(store, now_utc(), s.timezone, s.owner_name, outlook, github,
                                           s.watch_repos),
                 transcribe=transcribe)

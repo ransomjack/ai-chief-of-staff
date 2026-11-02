@@ -225,3 +225,19 @@ def test_morning_brief():
     assert run_morning(d) == "checkin"
     store.set_state("last_inbound_at", to_iso(NOW - timedelta(hours=2)))
     assert run_morning(d) == "brief"
+
+
+def test_done_and_snooze_answer_the_last_reminder():
+    store, wa = MemoryStore(), FakeWA()
+    task = store.add_task("Chase Anoop", NOW)
+    store.add_reminder("Chase Anoop", NOW - timedelta(minutes=1), task_id=task["id"])
+    d = make_deps(store, wa, agent=SimpleNamespace(reply=lambda t: "agent"))
+    run_reminders(d)
+    reply = handle_inbound(Inbound("m1", OWNER, "text", "SNOOZE 30m"), d)
+    assert reply.startswith("Snoozed") and len(store.list_reminders("pending")) == 1
+    later = NOW + timedelta(minutes=31)
+    d.now = lambda: later
+    run_reminders(d)
+    assert handle_inbound(Inbound("m2", OWNER, "text", "Done"), d) == "Marked done: Chase Anoop"
+    assert store.list_tasks("open") == []
+    assert handle_inbound(Inbound("m3", OWNER, "text", "done"), d) == "agent"  # nothing pending: goes to Claude

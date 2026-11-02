@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Callable
 
-from .clock import to_iso, window_open
+from .clock import fmt_local, to_iso, window_open
 from .store import Store
 from .whatsapp import Inbound, WhatsAppClient
 
@@ -14,6 +15,7 @@ log = logging.getLogger("cos")
 MAX_ATTEMPTS = 3
 BRIEF_WORDS = {"brief", "/brief", "morning brief", "show brief"}
 RESET_WORDS = {"/reset", "reset chat"}
+SNOOZE_RE = re.compile(r"^snooze(?:\s+(\d+)\s*(m|min|mins|minutes|h|hr|hrs|hours?))?$")
 
 
 @dataclass
@@ -25,6 +27,7 @@ class Deps:
     checkin_template: str
     template_lang: str
     now: Callable[[], datetime]
+    tz: str = "Asia/Kolkata"
     agent: Any = None
     brief: Callable[[], str] | None = None
     transcribe: Callable[[bytes, str], str] | None = None
@@ -62,10 +65,36 @@ def handle_inbound(item: Inbound, d: Deps) -> str | None:
             return _send(d, "Fresh start. Your tasks and reminders are untouched.")
         if word in BRIEF_WORDS and d.brief:
             return _send(d, d.brief())
+        quick = _reminder_reply(word, d)
+        if quick:
+            return _send(d, quick)
         return _send(d, prefix + d.agent.reply(text))
     except Exception:
         log.exception("Failed to handle message")
         return _send(d, "Something went wrong on my side and I've logged it. Please try again in a minute.")
+
+
+def _reminder_reply(word: str, d: Deps) -> str | None:
+    """DONE / SNOOZE answers to the last reminder (the reminder template asks for them)."""
+    rem_id = d.store.get_state("last_reminder_id")
+    if not rem_id:
+        return None
+    rem = d.store._get("reminder", rem_id)
+    if not rem:
+        return None
+    if word in ("done", "done.", "close"):
+        d.store.set_state("last_reminder_id", "")
+        if rem.get("task_id") and d.store.update_task(rem["task_id"], d.now(), status="done"):
+            return f"Marked done: {rem['text']}"
+        return f"Closed: {rem['text']}"
+    m = SNOOZE_RE.match(word)
+    if m:
+        amount, unit = m.group(1), (m.group(2) or "h")
+        delta = timedelta(minutes=int(amount)) if unit.startswith("m") else timedelta(hours=int(amount or 1))
+        new = d.store.add_reminder(rem["text"], d.now() + delta, task_id=rem.get("task_id", ""))
+        d.store.set_state("last_reminder_id", "")
+        return f"Snoozed. I'll remind you again at {fmt_local(d.now() + delta, d.tz)}. ({new['id']})"
+    return None
 
 
 def _send(d: Deps, text: str) -> str:
@@ -86,6 +115,7 @@ def run_reminders(d: Deps) -> list[str]:
             else:
                 d.wa.send_template(d.owner_number, d.reminder_template, d.template_lang, [rem["text"]])
             d.store.set_reminder_status(rem["id"], "sent")
+            d.store.set_state("last_reminder_id", rem["id"])
             sent.append(rem["id"])
         except Exception:
             attempts = int(rem.get("attempts", 0)) + 1

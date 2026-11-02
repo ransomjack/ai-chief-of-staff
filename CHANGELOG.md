@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 (3 Nov 2026)
+
+- Reply DONE or SNOOZE (SNOOZE 30m, SNOOZE 2h) to the last reminder; handled without an AI call.
+- Template wording changed so Meta accepts them as Utility.
+
 ## 0.1.0 (2 Nov 2026)
 
 First version, tested offline, not yet deployed.

@@ -26,8 +26,8 @@ Time: about an hour the first time.
 
 | Name | Body | Button |
 |---|---|---|
-| `cos_reminder` | `Hi, this is your reminder: {{1}}. Reply here to snooze it or mark it done.` (sample for {{1}}: `Chase Anoop on the year-end deck`) | none |
-| `cos_checkin` | `Good morning. Your daily brief is ready with today's meetings, tasks and follow-ups.` | Quick reply: `Show brief` |
+| `cos_reminder` | `Reminder you scheduled: {{1}}. You set this alert in your Chief of Staff account. Reply DONE to close it or SNOOZE to delay it.` (sample for {{1}}: `Chase Anoop on the year-end deck`) | none |
+| `cos_checkin` | `Your daily brief is ready. You turned on this morning summary in your Chief of Staff account. Tap below to see today's meetings, tasks and follow-ups.` | Quick reply: `Show brief` |
 
 If Meta re-categorises one as Marketing it still works; it just costs a little more per message.
 
