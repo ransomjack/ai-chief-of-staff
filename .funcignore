@@ -1,0 +1,11 @@
+.git*
+.github/
+.venv/
+tests/
+docs/
+scripts/
+*.md
+requirements-dev.txt
+local.settings*.json
+.pytest_cache/
+.ruff_cache/

@@ -1,0 +1,26 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "OWNER_NAME": "Abhinav",
+    "OWNER_WHATSAPP_NUMBER": "91XXXXXXXXXX",
+    "OWNER_TIMEZONE": "Asia/Kolkata",
+    "WHATSAPP_TOKEN": "",
+    "WHATSAPP_PHONE_NUMBER_ID": "",
+    "WHATSAPP_APP_SECRET": "",
+    "WHATSAPP_VERIFY_TOKEN": "",
+    "WHATSAPP_REMINDER_TEMPLATE": "cos_reminder",
+    "WHATSAPP_CHECKIN_TEMPLATE": "cos_checkin",
+    "WHATSAPP_TEMPLATE_LANG": "en",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "claude-sonnet-5-5",
+    "SPEECH_KEY": "",
+    "SPEECH_REGION": "centralindia",
+    "GITHUB_TOKEN": "",
+    "GITHUB_OWNER": "ransomjack",
+    "WATCH_REPOS": "ransomjack/ot-bulletin-newsletter,ransomjack/ot-bulletin-site,ransomjack/ai-soc-lab,ransomjack/ai-chief-of-staff",
+    "MS_CLIENT_ID": "",
+    "MS_REFRESH_TOKEN": ""
+  }
+}

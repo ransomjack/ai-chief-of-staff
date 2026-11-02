@@ -1,0 +1,5 @@
+azure-functions>=1.21
+azure-data-tables>=12.5
+anthropic>=0.40
+requests>=2.32
+tzdata>=2024.1
