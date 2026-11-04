@@ -33,8 +33,12 @@ az storage account create -n "$ST" -g "$RG" -l "$LOC" --sku Standard_LRS \
   --min-tls-version TLS1_2 --allow-blob-public-access false -o none
 
 echo "== Function App $APP (Python 3.12, Flex Consumption)"
-az functionapp create -n "$APP" -g "$RG" --storage-account "$ST" \
-  --flexconsumption-location "$LOC" --runtime python --runtime-version 3.12 -o none || true
+if ! az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites -o none 2>/dev/null; then
+  az functionapp create -n "$APP" -g "$RG" --storage-account "$ST" \
+    --flexconsumption-location "$LOC" --runtime python --runtime-version 3.12 -o none
+else
+  echo "   (already exists, skipping)"
+fi
 az functionapp identity assign -n "$APP" -g "$RG" -o none
 PRINCIPAL=$(az functionapp identity show -n "$APP" -g "$RG" --query principalId -o tsv)
 
@@ -76,7 +80,7 @@ Done. Names to keep:
   Resource group : $RG
   Function App   : $APP
   Key Vault      : $KV
-  Webhook URL    : https://$(az functionapp show -n "$APP" -g "$RG" --query defaultHostName -o tsv)/api/whatsapp
+  Webhook URL    : https://$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.defaultHostName -o tsv)/api/whatsapp
 
 Next: add the secrets (docs/SETUP.md, step 4), e.g.
   az keyvault secret set --vault-name $KV -n whatsapp-token --value '<paste>'
