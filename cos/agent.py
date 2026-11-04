@@ -46,6 +46,10 @@ def _block_to_dict(block: Any) -> dict:
         return {"type": "text", "text": block.text}
     if block.type == "tool_use":
         return {"type": "tool_use", "id": block.id, "name": block.name, "input": block.input}
+    # thinking / redacted_thinking blocks must go back to the API unchanged
+    # (text and signature included), or the next request is rejected with a 400.
+    if hasattr(block, "model_dump"):
+        return block.model_dump(exclude_none=True)
     return {"type": block.type}
 
 

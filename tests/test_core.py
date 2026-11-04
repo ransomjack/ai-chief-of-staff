@@ -241,3 +241,16 @@ def test_done_and_snooze_answer_the_last_reminder():
     assert handle_inbound(Inbound("m2", OWNER, "text", "Done"), d) == "Marked done: Chase Anoop"
     assert store.list_tasks("open") == []
     assert handle_inbound(Inbound("m3", OWNER, "text", "done"), d) == "agent"  # nothing pending: goes to Claude
+
+
+def test_thinking_blocks_are_kept_intact_for_the_next_request():
+    from types import SimpleNamespace
+
+    from cos.agent import _block_to_dict
+
+    class Block(SimpleNamespace):
+        def model_dump(self, exclude_none=False):
+            return {k: v for k, v in vars(self).items() if not (exclude_none and v is None)}
+
+    b = Block(type="thinking", thinking="plan", signature="sig", extra=None)
+    assert _block_to_dict(b) == {"type": "thinking", "thinking": "plan", "signature": "sig"}
