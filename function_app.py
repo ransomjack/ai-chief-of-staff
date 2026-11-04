@@ -21,7 +21,7 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.route(route="whatsapp", methods=["GET", "POST"])
 @app.queue_output(arg_name="out", queue_name="inbound", connection="AzureWebJobsStorage")
-def whatsapp_webhook(req: func.HttpRequest, out: func.Out[list[str]]) -> func.HttpResponse:
+def whatsapp_webhook(req: func.HttpRequest, out: func.Out[str]) -> func.HttpResponse:
     s = settings()
     if req.method == "GET":  # one-time handshake when the webhook is registered in Meta
         if req.params.get("hub.mode") == "subscribe" and req.params.get("hub.verify_token") == s.wa_verify_token:
@@ -36,15 +36,17 @@ def whatsapp_webhook(req: func.HttpRequest, out: func.Out[list[str]]) -> func.Ht
         items = parse_webhook(json.loads(raw))
     except ValueError:
         return func.HttpResponse("bad json", status_code=400)
-    mine = [json.dumps(i.to_dict()) for i in items if i.sender == s.owner_number]
-    if mine:
-        out.set(mine)
+    mine = [i.to_dict() for i in items if i.sender == s.owner_number]
+    if mine:  # one queue message holding a list; process_inbound handles each item
+        out.set(json.dumps(mine))
     return func.HttpResponse("ok", status_code=200)
 
 
 @app.queue_trigger(arg_name="msg", queue_name="inbound", connection="AzureWebJobsStorage")
 def process_inbound(msg: func.QueueMessage) -> None:
-    handle_inbound(Inbound(**json.loads(msg.get_body().decode())), deps())
+    data = json.loads(msg.get_body().decode())
+    for item in data if isinstance(data, list) else [data]:
+        handle_inbound(Inbound(**item), deps())
 
 
 @app.timer_trigger(arg_name="timer", schedule="0 */5 * * * *", run_on_startup=False)
